@@ -1,1 +1,1 @@
-# literate-system
+# No contents
