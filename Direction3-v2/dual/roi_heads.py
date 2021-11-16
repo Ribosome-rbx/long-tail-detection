@@ -17,6 +17,7 @@ from detectron2.modeling.proposal_generator.proposal_utils import add_ground_tru
 from detectron2.utils.events import get_event_storage
 
 from .contrastive_loss import build_contrastive_head, ContrastiveHead, SupConLoss
+from .transformer import build_transformer
 logger = logging.getLogger(__name__)
 
 
@@ -30,6 +31,7 @@ class dualROIHeads(StandardROIHeads):
         box_pooler: ROIPooler,
         box_head: nn.Module,
         box_predictor: nn.Module,
+        transformer: nn.Module,
         contrastive_head: nn.Module,
         mask_in_features: Optional[List[str]] = None,
         mask_pooler: Optional[ROIPooler] = None,
@@ -67,6 +69,7 @@ class dualROIHeads(StandardROIHeads):
         self.box_pooler = box_pooler
         self.box_head = box_head
         self.box_predictor = box_predictor
+        self.transformer = transformer
 
         self.mask_on = mask_in_features is not None
         if self.mask_on:
@@ -103,7 +106,8 @@ class dualROIHeads(StandardROIHeads):
             "train_on_pred_boxes": cfg.MODEL.ROI_BOX_HEAD.TRAIN_ON_PRED_BOXES,
             "contrastive_head": build_contrastive_head(cfg),
             "contrastive_branch": cfg.MODEL.ROI_HEADS.CONTRASTIVE_BRANCH,
-        }        
+            "transformer": build_transformer(cfg),
+        }
         # Subclasses that have not been updated to use from_config style construction
         # may have overridden _init_*_head methods. In this case, those overridden methods
         # will not be classmethods and we need to avoid trying to call them here.
@@ -177,7 +181,8 @@ class dualROIHeads(StandardROIHeads):
         """
         features = [features[f] for f in self.box_in_features]
         box_features = self.box_pooler(features, [x.proposal_boxes for x in proposals])
-        box_features = self.box_head(box_features)
+        box_features = self.box_head(box_features).unsqueeze(1)
+        box_features = self.transformer(box_features, box_features)
         predictions = self.box_predictor(box_features)
 
         if self.training:
@@ -228,7 +233,6 @@ class dualROIHeads(StandardROIHeads):
                 rare_prop = [p[int(i)] for i in rare_idxs]
                 rare_proposals.append(Instances.cat(rare_prop))
                 feature_idx.append(p_idx)
-        
         proposals = proposals[:cur_batchsize] + rare_proposals
         for key in features.keys():
             features[key] = features[key][feature_idx]

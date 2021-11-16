@@ -1,8 +1,0 @@
-def add_config(cfg):
-    cfg.MODEL.BACKBONE.MOMENTUM = 0.99
-    cfg.MODEL.ROI_HEADS.RARE_CAT_FILE = "lvis0.5_rare_cats.txt"
-    cfg.MODEL.ROI_HEADS.CONTRASTIVE_BRANCH = False
-    cfg.MODEL.ROI_BOX_HEAD.MLP_FEATURE_DIM = 128
-    cfg.MODEL.ROI_BOX_HEAD.TEMPERATURE = 0.1
-    cfg.MODEL.ROI_BOX_HEAD.LOSS_WEIGHT = 1.0
-    
