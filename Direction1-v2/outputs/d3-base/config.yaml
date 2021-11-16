@@ -277,12 +277,12 @@ MODEL:
     NORM: GN
     NUM_CLASSES: 54
   WEIGHTS: detectron2://ImageNetPretrained/MSRA/R-50.pkl
-OUTPUT_DIR: ./outputs/try
+OUTPUT_DIR: ./outputs/d3-base
 SEED: 6481261
 SOLVER:
   AMP:
     ENABLED: false
-  BASE_LR: 0.02
+  BASE_LR: 0.01
   BIAS_LR_FACTOR: 1.0
   CHECKPOINT_PERIOD: 5000
   CLIP_GRADIENTS:
@@ -291,7 +291,7 @@ SOLVER:
     ENABLED: false
     NORM_TYPE: 2.0
   GAMMA: 0.1
-  IMS_PER_BATCH: 16
+  IMS_PER_BATCH: 8
   LR_SCHEDULER_NAME: WarmupMultiStepLR
   MAX_ITER: 90000
   MOMENTUM: 0.9
