@@ -1,0 +1,16 @@
+_BASE_: "./LVISv0.5-InstanceSegmentation/mask_rcnn_R_50_FPN_1x.yaml"
+MODEL:
+  META_ARCHITECTURE: "DualRCNN_sample"
+  BACKBONE:
+    MOMENTUM: 0.99
+  ROI_HEADS:
+    NAME: "dualROIHeads"
+    RARE_CAT_FILE: "lvis_categories_lists/lvis0.5_rare_common30_cats.txt"
+    CONTRASTIVE_BRANCH: True
+  ROI_BOX_HEAD:
+    MLP_FEATURE_DIM: 128
+    TEMPERATURE: 0.1
+    LOSS_WEIGHT: 1.0
+TEST:
+  EVAL_PERIOD: 5000
+SEED: 6481261
