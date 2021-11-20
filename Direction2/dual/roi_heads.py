@@ -183,8 +183,9 @@ class dualROIHeads(StandardROIHeads):
         features = [features[f] for f in self.box_in_features]
         box_features = self.box_pooler(features, [x.proposal_boxes for x in proposals])
         box_features = self.box_head(box_features)
-        query, key, proposals = self.get_qk(box_features, proposals, len_rare, rare_categories)
-        box_features = self.transformer(query, key, box_features)
+        if self.training:
+            query, key, proposals = self.get_qk(box_features, proposals, len_rare, rare_categories)
+            box_features = self.transformer(query, key, box_features)
         predictions = self.box_predictor(box_features)
 
         if self.training:
