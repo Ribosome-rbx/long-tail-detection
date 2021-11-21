@@ -18,12 +18,13 @@ def build_transformer(cfg):
     activation = cfg.MODEL.BACKBONE.ACTIVATION
     normalize_before = cfg.MODEL.BACKBONE.NORMALIZE_BEFORE
     return_intermediate = cfg.MODEL.BACKBONE.RETURN_INTERMEDIATE
+    weight = cfg.MODEL.BACKBONE.TRANSFORMER_WEIGHT
     return Decoder(d_model, nhead, num_decoder_layers, dim_feedforward,
-        dropout, activation, normalize_before, return_intermediate)
+        dropout, activation, normalize_before, return_intermediate, weight)
 
 class Decoder(nn.Module):
     def __init__(self, d_model=512, nhead=8, num_decoder_layers=6, dim_feedforward=2048,
-        dropout=0.1, activation="relu", normalize_before=False, return_intermediate=False,
+        dropout=0.1, activation="relu", normalize_before=False, return_intermediate=False, weight=None,
     ):
         """
         decoder_layer: Object(TransformerDecoderLayer)
@@ -42,6 +43,7 @@ class Decoder(nn.Module):
 
         self.d_model = d_model
         self.nhead = nhead
+        self.weight = weight
         
     def _reset_parameters(self):
         for p in self.parameters():
@@ -72,7 +74,7 @@ class Decoder(nn.Module):
         if len(output) == len(memory):
             return box_features + output * 0
         else:
-            return torch.cat([box_features, output], dim=0)
+            return torch.cat([box_features, output * self.weight], dim=0)
 
 
 class TransformerDecoderLayer(nn.Module):

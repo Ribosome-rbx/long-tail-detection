@@ -6,6 +6,7 @@ MODEL:
   ROI_HEADS:
     NAME: "dualROIHeads"
     RARE_CAT_FILE: "lvis_categories_lists/lvis0.5_rare_common30_cats.txt"
+    CACHE_CAT_FILE: "lvis_categories_lists/lvis0.5_rare_common30_cats.txt"
     # RARE_WEIGHT: 0.01
 TEST:
   EVAL_PERIOD: 5000

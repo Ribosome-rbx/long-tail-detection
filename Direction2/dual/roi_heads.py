@@ -1,4 +1,5 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
+import pdb
 import inspect
 import logging
 import copy
@@ -7,9 +8,11 @@ from typing import Dict, List, Optional, Tuple
 import torch
 from torch import nn
 
+from detectron2.layers import ShapeSpec, cat
 from detectron2.config import configurable
 from detectron2.structures import ImageList, Instances, pairwise_iou
 from detectron2.modeling import StandardROIHeads, ROI_HEADS_REGISTRY
+from detectron2.modeling.roi_heads.box_head import build_box_head
 from detectron2.modeling.poolers import ROIPooler
 from detectron2.modeling.matcher import Matcher
 from detectron2.structures import Boxes
@@ -18,6 +21,9 @@ from detectron2.utils.events import get_event_storage
 
 from .contrastive_loss import build_contrastive_head, ContrastiveHead, SupConLoss
 from .transformer import build_transformer
+from .fast_rcnn import MemoryFastRCNNOutputLayers
+from .lvis_v0_5_categories import get_image_count_frequency
+
 logger = logging.getLogger(__name__)
 
 
@@ -41,7 +47,14 @@ class dualROIHeads(StandardROIHeads):
         keypoint_head: Optional[nn.Module] = None,
         train_on_pred_boxes: bool = False,
         contrastive_branch: bool = False,
-        **kwargs
+        # memory bank parameters
+        temp_S=None,
+        min_cache=None,
+        max_cache=None,
+        cls_layer=None,
+        random_select=None,
+        cache_category_file=None,
+        **kwargs,
     ):
         """
         NOTE: this interface is experimental.
@@ -89,6 +102,34 @@ class dualROIHeads(StandardROIHeads):
             self.keypoint_head = keypoint_head
 
         self.train_on_pred_boxes = train_on_pred_boxes
+
+        # memory bank
+        self.cls_layer = cls_layer
+        if "lvis" in cache_category_file:
+            self.cache_categories = np.array(
+                [int(x.rstrip()) - 1 for x in open(cache_category_file)]
+            )
+        else:
+            logging.critical("not using lvis bank category file")
+
+        if "lvis0" in cache_category_file:
+            assert 1230 not in self.cache_categories
+            assert self.num_classes == 1230
+        elif "lvis1" in cache_category_file:
+            assert 1203 not in self.cache_categories
+            assert self.num_classes == 1203
+
+        self.memory_cache = {
+            c: {
+                "box_features": np.empty((max_cache, 1024), dtype=np.float32),
+                "proposals": np.empty((max_cache,), dtype=Instances),
+            }
+            for c in self.cache_categories
+        }
+        self.memory_cache_max_idx = np.zeros(self.num_classes, dtype=int)
+        self.min_cache = min_cache
+        self.max_cache = max_cache
+        self.random_select = random_select
         
     @classmethod
     def from_config(cls, cfg, input_shape):
@@ -107,6 +148,13 @@ class dualROIHeads(StandardROIHeads):
             "contrastive_head": build_contrastive_head(cfg),
             "contrastive_branch": cfg.MODEL.ROI_HEADS.CONTRASTIVE_BRANCH,
             "transformer": build_transformer(cfg),
+            # memory bank
+            "cls_layer": cfg.MODEL.ROI_HEADS.CLS_LAYER,
+            "temp_S": cfg.MODEL.ROI_HEADS.TEMP_S,
+            "min_cache": cfg.MODEL.ROI_HEADS.MIN_CACHE,
+            "max_cache": cfg.MODEL.ROI_HEADS.MAX_CACHE,
+            "random_select": cfg.MODEL.ROI_HEADS.RANDOM_SELECT,
+            "cache_category_file": cfg.MODEL.ROI_HEADS.CACHE_CAT_FILE,
         }
         # Subclasses that have not been updated to use from_config style construction
         # may have overridden _init_*_head methods. In this case, those overridden methods
@@ -120,6 +168,141 @@ class dualROIHeads(StandardROIHeads):
         if inspect.ismethod(cls._init_keypoint_head):
             ret.update(cls._init_keypoint_head(cfg, input_shape))
         return ret
+
+    @classmethod
+    def _init_box_head(cls, cfg, input_shape):
+        # fmt: off
+        in_features              = cfg.MODEL.ROI_HEADS.IN_FEATURES
+        pooler_resolution        = cfg.MODEL.ROI_BOX_HEAD.POOLER_RESOLUTION
+        pooler_scales            = tuple(1.0 / input_shape[k].stride for k in in_features)
+        sampling_ratio           = cfg.MODEL.ROI_BOX_HEAD.POOLER_SAMPLING_RATIO
+        pooler_type              = cfg.MODEL.ROI_BOX_HEAD.POOLER_TYPE
+
+        # fmt: on
+
+        # If StandardROIHeads is applied on multiple feature maps (as in FPN),
+        # then we share the same predictors and therefore the channel counts must be the same
+        in_channels = [input_shape[f].channels for f in in_features]
+        # Check all channel counts are equal
+        assert len(set(in_channels)) == 1, in_channels
+        in_channels = in_channels[0]
+
+        box_pooler = ROIPooler(
+            output_size=pooler_resolution,
+            scales=pooler_scales,
+            sampling_ratio=sampling_ratio,
+            pooler_type=pooler_type,
+        )
+        # Here we split "box head" and "box predictor", which is mainly due to historical reasons.
+        # They are used together so the "box predictor" layers should be part of the "box head".
+        # New subclasses of ROIHeads do not need "box predictor"s.
+        box_head = build_box_head(
+            cfg,
+            ShapeSpec(
+                channels=in_channels, height=pooler_resolution, width=pooler_resolution
+            ),
+        )
+        box_predictor = MemoryFastRCNNOutputLayers(cfg, box_head.output_shape)
+
+        freq_info = torch.FloatTensor(get_image_count_frequency())
+        return {
+            "box_in_features": in_features,
+            "box_pooler": box_pooler,
+            "box_head": box_head,
+            "box_predictor": box_predictor,
+        }
+
+    def update_memory_bank(self, box_features, proposals):
+        for p_idx in range(len(proposals)):
+            p = proposals[p_idx]
+            cur_gt_classes = p.gt_classes.cpu().numpy()
+            rare_idxs = np.where(np.isin(cur_gt_classes, self.cache_categories))[0]
+            if len(rare_idxs) > 0:
+                for idx in rare_idxs:
+                    c = cur_gt_classes[idx]
+                    # append current feat to cache
+                    feat = box_features[p_idx * len(p) + idx].detach().cpu().clone()
+                    prop = copy.deepcopy(p[int(idx)])
+
+                    # shift if exceeding max cache space
+                    if self.memory_cache_max_idx[c] == self.max_cache:
+                        self.memory_cache[c]["box_features"][
+                            :-1, :
+                        ] = self.memory_cache[c]["box_features"][1:, :]
+                        self.memory_cache[c]["proposals"][:-1] = self.memory_cache[c][
+                            "proposals"
+                        ][1:]
+                        # reset to last index (allow to grow by 1)
+                        self.memory_cache_max_idx[c] = self.max_cache - 1
+                    # append to cache
+                    self.memory_cache[c]["box_features"][
+                        self.memory_cache_max_idx[c]
+                    ] = feat
+                    self.memory_cache[c]["proposals"][
+                        self.memory_cache_max_idx[c]
+                    ] = prop
+
+                    self.memory_cache_max_idx[c] += 1
+
+    def use_memory_cache(self, box_features, proposals):
+        # check if we're using memory bank
+        if not self.min_cache:
+            gt_classes = cat([p.gt_classes for p in proposals], dim=0)
+            return proposals, box_features, gt_classes
+
+        augmented_proposals = proposals
+
+        # target classes that exist in the current batch
+        target_classes = []
+        for p_idx in range(len(proposals)):
+            p = proposals[p_idx]
+            cur_gt_classes = p.gt_classes.cpu().numpy()
+            rare_idxs = np.where(np.isin(cur_gt_classes, self.cache_categories))[0]
+            target_classes.extend(cur_gt_classes[rare_idxs])
+
+        # count number of instances per category for any targeted category
+        target_instances = dict()
+        for i in target_classes:
+            target_instances[i] = target_instances.get(i, 0) + 1
+
+        new_proposals = []
+        new_features = torch.tensor([]).cuda()
+        for c in set(target_classes):
+            num_samp_cache = self.memory_cache_max_idx[c]
+            if num_samp_cache > 0:
+                # get from cache x amount of samples. x = num_new_samps
+                # use either the designated amount of samples (default 20) or the minimum amount in the current cache
+                num_new_samps = min(self.min_cache, num_samp_cache)
+
+                if self.random_select and num_samp_cache > num_new_samps:
+                    cache_idxs = np.random.choice(
+                        num_samp_cache, num_new_samps, replace=False
+                    )
+                else:
+                    cache_idxs = np.arange(
+                        num_samp_cache - num_new_samps, self.memory_cache_max_idx[c]
+                    )
+
+                new_feats = torch.from_numpy(
+                    self.memory_cache[c]["box_features"][cache_idxs]
+                )
+                new_features = torch.cat((new_features, new_feats.cuda()), dim=0)
+                if None in self.memory_cache[c]["proposals"][cache_idxs]:
+                    pdb.set_trace()
+                new_proposals.extend(self.memory_cache[c]["proposals"][cache_idxs])
+
+        # update memory bank with current model
+        self.update_memory_bank(box_features, proposals)
+
+        if len(new_proposals) > 0:
+            box_features = torch.cat((box_features, new_features), dim=0)
+            augmented_proposals = copy.deepcopy(proposals)
+            augmented_proposals.extend(new_proposals)
+
+        all_gt_classes = cat([p.gt_classes for p in augmented_proposals], dim=0)
+        assert len(all_gt_classes) == len(box_features)
+
+        return augmented_proposals, box_features
 
     def forward(
         self,
@@ -184,15 +367,22 @@ class dualROIHeads(StandardROIHeads):
         box_features = self.box_pooler(features, [x.proposal_boxes for x in proposals])
         box_features = self.box_head(box_features)
         if self.training:
-            query, key, proposals = self.get_qk(box_features, proposals, len_rare, rare_categories)
+            # memory bank
+            augmented_proposals, box_features = self.use_memory_cache(
+                box_features, proposals
+            )
+            if len(box_features) > 1024:
+                breakpoint()
+            # transformer
+            query, key, augmented_proposals = self.get_qk(box_features, augmented_proposals, rare_categories)
             box_features = self.transformer(query, key, box_features)
         predictions = self.box_predictor(box_features)
 
         if self.training:
-            losses = self.box_predictor.losses(predictions, proposals)
+            losses = self.box_predictor.losses(predictions, augmented_proposals)
             if self.contrastive_branch:
                 breakpoint()
-                gt_classes = [prop.gt_classes for prop in proposals]
+                gt_classes = [prop.gt_classes for prop in augmented_proposals]
                 gt_classes = torch.cat(gt_classes, dim=0)
                 losses.update(self.contrastive_head(box_features, gt_classes, len_rare)) ###
             del box_features
@@ -211,7 +401,7 @@ class dualROIHeads(StandardROIHeads):
             return pred_instances
 
     @torch.no_grad()   
-    def get_qk(self, box_features, proposals, len_rare, rare_categories): 
+    def get_qk(self, box_features, proposals, rare_categories): 
         # get query
         split_features = box_features
         query = []
