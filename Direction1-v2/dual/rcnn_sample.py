@@ -181,7 +181,7 @@ class DualRCNN_sample(nn.Module):
             else:
                 self._momentum_update_avg_backbone()  # update the avg_backbone
             rare_images_list, rare_gt_instances, rare_img_idx = self.extract_rare(images, gt_instances)
-        
+
         # feed into avg_model to update batch
         if len(rare_images_list) > 0:
             rare_images = _from_tensors(images_list, rare_images_list, self.backbone.size_divisibility)
