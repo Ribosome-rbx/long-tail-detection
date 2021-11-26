@@ -51,7 +51,7 @@ class Decoder(nn.Module):
                 nn.init.xavier_uniform_(p)
 
 
-    def forward(self, output, memory, box_features):
+    def forward(self, output, memory):
         '''
         box_features [1024, 1024]
         prop_info {'batchsize': 2, 'prop_len': [512, 512, 5], 'rare_idxs': {'0': array([0, 3, 5, 7, 8])}}
@@ -71,10 +71,7 @@ class Decoder(nn.Module):
             output = torch.mean(torch.stack(intermediate),0)
         output = output.squeeze(1)
 
-        if len(output) == len(memory):
-            return box_features + output * 0
-        else:
-            return torch.cat([box_features, output * self.weight], dim=0)
+        return output * self.weight
 
 
 class TransformerDecoderLayer(nn.Module):

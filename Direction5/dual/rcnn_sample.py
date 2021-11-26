@@ -172,35 +172,35 @@ class DualRCNN_sample(nn.Module):
 
         features = self.backbone(images.tensor)
         
-        ### compute rare features
-        with torch.no_grad():  # no gradient to avg-model
-            if self.avg_backbone == None:
-                self.avg_backbone = copy.deepcopy(self.backbone) # initialize the avg_backbone
-                for avg_param in self.avg_backbone.parameters():
-                    avg_param.requires_grad = False  # not update by gradient
-            else:
-                self._momentum_update_avg_backbone()  # update the avg_backbone
-            rare_images_list, rare_gt_instances, rare_img_idx = self.extract_rare(images, gt_instances)
+        # ### compute rare features
+        # with torch.no_grad():  # no gradient to avg-model
+        #     if self.avg_backbone == None:
+        #         self.avg_backbone = copy.deepcopy(self.backbone) # initialize the avg_backbone
+        #         for avg_param in self.avg_backbone.parameters():
+        #             avg_param.requires_grad = False  # not update by gradient
+        #     else:
+        #         self._momentum_update_avg_backbone()  # update the avg_backbone
+        #     rare_images_list, rare_gt_instances, rare_img_idx = self.extract_rare(images, gt_instances)
         
-        # feed into avg_model to update batch
-        if len(rare_images_list) > 0:
-            rare_images = _from_tensors(images_list, rare_images_list, self.backbone.size_divisibility)
-            rare_features = self.avg_backbone(rare_images.tensor)
+        # # feed into avg_model to update batch
+        # if len(rare_images_list) > 0:
+        #     rare_images = _from_tensors(images_list, rare_images_list, self.backbone.size_divisibility)
+        #     rare_features = self.avg_backbone(rare_images.tensor)
 
-            # concatenate origional batch with rare_image set
-            new_images_list = images_list + rare_images_list
-            new_images = ImageList.from_tensors(new_images_list, self.backbone.size_divisibility)
+        #     # concatenate origional batch with rare_image set
+        #     new_images_list = images_list + rare_images_list
+        #     new_images = ImageList.from_tensors(new_images_list, self.backbone.size_divisibility)
             
-            # concatenate origional gt with rare_image gt
-            new_gt_instances = gt_instances + rare_gt_instances 
-            # concatenate origional feature with new features
-            new_features = {}
-            for key in features.keys():
-                new_features[key] = torch.cat([features[key], rare_features[key]], dim=0)
-        else:
-            new_images = images
-            new_gt_instances = gt_instances
-            new_features = features
+        #     # concatenate origional gt with rare_image gt
+        #     new_gt_instances = gt_instances + rare_gt_instances 
+        #     # concatenate origional feature with new features
+        #     new_features = {}
+        #     for key in features.keys():
+        #         new_features[key] = torch.cat([features[key], rare_features[key]], dim=0)
+        # else:
+        #     new_images = images
+        #     new_gt_instances = gt_instances
+        #     new_features = features
 
         if self.proposal_generator is not None:
             # only origional image batch are used to generate proposals
@@ -212,7 +212,7 @@ class DualRCNN_sample(nn.Module):
             proposal_losses = {}
         
         # both origional batch and rare images are fed into roi_heads, where we expand the proposals for rare images
-        _, detector_losses = self.roi_heads(images, features, proposals, gt_instances, rare_img_idx, cur_batchsize, self.rare_categories)
+        _, detector_losses = self.roi_heads(images, features, proposals, gt_instances)
         # here changed all new_ into current ones
         if self.vis_period > 0:
             storage = get_event_storage()

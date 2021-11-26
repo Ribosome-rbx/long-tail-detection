@@ -286,6 +286,10 @@ class dualROIHeads(StandardROIHeads):
                 new_feats = torch.from_numpy(
                     self.memory_cache[c]["box_features"][cache_idxs]
                 )
+
+                # query, key, proposals = self.get_qk(box_features, proposals, self.cache_categories)
+                new_feats = self.transformer(new_feats.unsqueeze(1).cuda(), box_features.unsqueeze(1))
+
                 new_features = torch.cat((new_features, new_feats.cuda()), dim=0)
                 if None in self.memory_cache[c]["proposals"][cache_idxs]:
                     pdb.set_trace()
@@ -301,8 +305,10 @@ class dualROIHeads(StandardROIHeads):
 
         all_gt_classes = cat([p.gt_classes for p in augmented_proposals], dim=0)
         assert len(all_gt_classes) == len(box_features)
-
-        return augmented_proposals, box_features
+        
+        zero = torch.zeros_like(box_features[0].unsqueeze(0).unsqueeze(0))
+        zero = self.transformer(zero, zero)
+        return augmented_proposals, box_features + 0*zero
 
     def forward(
         self,
@@ -310,9 +316,9 @@ class dualROIHeads(StandardROIHeads):
         features: Dict[str, torch.Tensor],
         proposals: List[Instances],
         targets: Optional[List[Instances]] = None,
-        rare_img_idx = None,
-        cur_batchsize = None,
-        rare_categories = None,
+        # rare_img_idx = None,
+        # cur_batchsize = None,
+        # rare_categories = None,
     ) -> Tuple[List[Instances], Dict[str, torch.Tensor]]:
         """
         See :class:`ROIHeads.forward`.
@@ -322,20 +328,20 @@ class dualROIHeads(StandardROIHeads):
             # all_proposals = copy.deepcopy(proposals)
             proposals = self.label_and_sample_proposals(proposals, targets)
             # copy rare proposals for new features, proposals.dim(0) == images.dim(0)
-            len_rare = 0
-            if not cur_batchsize == len(proposals):
-                breakpoint()
-                proposals = self.copy_rare_proposals(
-                    cur_batchsize, rare_img_idx, proposals, rare_categories)
-                breakpoint()
-                features, proposals, len_rare = self.filter_rare_proposals(
-                    cur_batchsize, features, proposals, rare_categories)
-                breakpoint()
+            # len_rare = 0
+            # if not cur_batchsize == len(proposals):
+            #     breakpoint()
+            #     proposals = self.copy_rare_proposals(
+            #         cur_batchsize, rare_img_idx, proposals, rare_categories)
+            #     breakpoint()
+            #     features, proposals, len_rare = self.filter_rare_proposals(
+            #         cur_batchsize, features, proposals, rare_categories)
+            #     breakpoint()
         del targets, images
 
         if self.training:
-            # losses = self._forward_box(features, proposals, len_rare)
-            losses = self._forward_box(features, proposals, len_rare, rare_categories)
+            # losses = self._forward_box(features, proposals, len_rare, rare_categories)
+            losses = self._forward_box(features, proposals)
             # Usually the original proposals used by the box head are used by the mask, keypoint
             # heads. But when `self.train_on_pred_boxes is True`, proposals will contain boxes
             # predicted by the box head.
@@ -369,10 +375,12 @@ class dualROIHeads(StandardROIHeads):
         features = [features[f] for f in self.box_in_features]
         box_features = self.box_pooler(features, [x.proposal_boxes for x in proposals])
         box_features = self.box_head(box_features)
+
+        augmented_proposals = proposals
         if self.training:
-            # transformer
-            query, key, proposals = self.get_qk(box_features, proposals, self.cache_categories)
-            box_features = self.transformer(query, key, box_features)
+            # # transformer
+            # query, key, proposals = self.get_qk(box_features, proposals, self.cache_categories)
+            # box_features = self.transformer(query, key, box_features)
             # memory bank
             augmented_proposals, box_features = self.use_memory_cache(
                 box_features, proposals
