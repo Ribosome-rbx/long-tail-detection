@@ -1,5 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 import pdb
+import random
 import inspect
 import logging
 import copy
@@ -267,6 +268,9 @@ class dualROIHeads(StandardROIHeads):
 
         new_proposals = []
         new_features = torch.tensor([]).cuda()
+        if len(target_classes) == 0:
+            rand_idx = np.array(random.sample(range(len(self.cache_categories)), 2))
+            target_classes.extend(self.cache_categories[rand_idx])
         for c in set(target_classes):
             num_samp_cache = self.memory_cache_max_idx[c]
             if num_samp_cache > 0:
