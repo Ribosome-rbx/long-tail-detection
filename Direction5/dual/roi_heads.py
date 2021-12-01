@@ -1,5 +1,6 @@
 # Copyright (c) Facebook, Inc. and its affiliates.
 import pdb
+import random
 import inspect
 import logging
 import copy
@@ -54,6 +55,7 @@ class dualROIHeads(StandardROIHeads):
         cls_layer=None,
         random_select=None,
         cache_category_file=None,
+        rand_num = None,
         **kwargs,
     ):
         """
@@ -130,6 +132,7 @@ class dualROIHeads(StandardROIHeads):
         self.min_cache = min_cache
         self.max_cache = max_cache
         self.random_select = random_select
+        self.rand_num = rand_num
         
     @classmethod
     def from_config(cls, cfg, input_shape):
@@ -155,6 +158,7 @@ class dualROIHeads(StandardROIHeads):
             "max_cache": cfg.MODEL.ROI_HEADS.MAX_CACHE,
             "random_select": cfg.MODEL.ROI_HEADS.RANDOM_SELECT,
             "cache_category_file": cfg.MODEL.ROI_HEADS.CACHE_CAT_FILE,
+            "rand_num": cfg.MODEL.ROI_HEADS.RAND_NUM,
         }
         # Subclasses that have not been updated to use from_config style construction
         # may have overridden _init_*_head methods. In this case, those overridden methods
@@ -267,6 +271,9 @@ class dualROIHeads(StandardROIHeads):
 
         new_proposals = []
         new_features = torch.tensor([]).cuda()
+        if len(target_classes) == 0:
+            rand_idx = np.array(random.sample(range(len(self.cache_categories)), self.rand_num))
+            target_classes.extend(self.cache_categories[rand_idx])
         for c in set(target_classes):
             num_samp_cache = self.memory_cache_max_idx[c]
             if num_samp_cache > 0:

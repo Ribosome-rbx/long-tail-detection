@@ -10,7 +10,7 @@ def add_config(cfg):
     cfg.MODEL.BACKBONE.NORMALIZE_BEFORE = False
     cfg.MODEL.BACKBONE.NORM = None
     cfg.MODEL.BACKBONE.RETURN_INTERMEDIATE = False
-    cfg.MODEL.BACKBONE.TRANSFORMER_WEIGHT = 0.01
+    cfg.MODEL.BACKBONE.TRANSFORMER_WEIGHT = 1.0
     # contrastive configs
     cfg.MODEL.ROI_HEADS.CONTRASTIVE_BRANCH = False
     cfg.MODEL.ROI_BOX_HEAD.MLP_FEATURE_DIM = 128
@@ -24,3 +24,4 @@ def add_config(cfg):
     cfg.MODEL.ROI_HEADS.CACHE_CAT_FILE = "lvis0.5_rare_cats.txt"
     cfg.MODEL.ROI_HEADS.CLS_LAYER = "cosine"
     cfg.MODEL.ROI_HEADS.RUN = 1
+    cfg.MODEL.ROI_HEADS.RAND_NUM = 5
