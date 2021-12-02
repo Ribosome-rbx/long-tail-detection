@@ -56,7 +56,7 @@ class Decoder(nn.Module):
         box_features [1024, 1024]
         prop_info {'batchsize': 2, 'prop_len': [512, 512, 5], 'rare_idxs': {'0': array([0, 3, 5, 7, 8])}}
         '''
-        intermediate = []
+        intermediate = [output, ]
         for layer in self.layers:
             output = layer(output, memory)
             if self.return_intermediate:
@@ -64,13 +64,9 @@ class Decoder(nn.Module):
 
         if self.norm is not None:
             output = self.norm(output)
-            if self.return_intermediate:
-                intermediate.pop()
-                intermediate.append(output)
         if self.return_intermediate:
             output = torch.mean(torch.stack(intermediate),0)
         output = output.squeeze(1)
-
         return output * self.weight
 
 
@@ -123,7 +119,7 @@ class TransformerDecoderLayer(nn.Module):
         tgt = tgt + self.dropout2(tgt2)
         tgt = self.norm2(tgt)
         tgt2 = self.linear2(self.dropout(self.activation(self.linear1(tgt))))
-        tgt = tgt + self.dropout3(tgt2)
+        tgt = tgt + self.dropout3(tgt2) # add the query vector in to feature
         tgt = self.norm3(tgt)
         return tgt
 

@@ -1,0 +1,4 @@
+def add_config(cfg):
+    cfg.MODEL.BACKBONE.MOMENTUM = 0.99
+    cfg.MODEL.ROI_HEADS.IMG_RARE_CAT_FILE = None
+    cfg.MODEL.ROI_HEADS.SMP_RARE_CAT_FILE = None
