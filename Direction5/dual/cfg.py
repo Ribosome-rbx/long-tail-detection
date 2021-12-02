@@ -24,3 +24,4 @@ def add_config(cfg):
     cfg.MODEL.ROI_HEADS.CACHE_CAT_FILE = "lvis0.5_rare_cats.txt"
     cfg.MODEL.ROI_HEADS.CLS_LAYER = "cosine"
     cfg.MODEL.ROI_HEADS.RUN = 1
+    cfg.MODEL.ROI_HEADS.RAND_NUM = 5
