@@ -56,7 +56,7 @@ class Decoder(nn.Module):
         box_features [1024, 1024]
         prop_info {'batchsize': 2, 'prop_len': [512, 512, 5], 'rare_idxs': {'0': array([0, 3, 5, 7, 8])}}
         '''
-        intermediate = [output, ]
+        intermediate = []
         for layer in self.layers:
             output = layer(output, memory)
             if self.return_intermediate:
@@ -121,6 +121,7 @@ class TransformerDecoderLayer(nn.Module):
         tgt2 = self.linear2(self.dropout(self.activation(self.linear1(tgt))))
         tgt = tgt + self.dropout3(tgt2) # add the query vector in to feature
         tgt = self.norm3(tgt)
+        tgt = tgt + q
         return tgt
 
     def forward_pre(self, tgt, memory,
