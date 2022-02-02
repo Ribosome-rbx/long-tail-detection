@@ -7,8 +7,8 @@ We built the averaged backbone, Transformer block and contrastive branch, and ch
 
 #### Environment
 - Python >= 3.6
-- PyTorch 1.6.0 with CUDA 10.2 Please refer to download guildlines at the [PyTorch website](pytorch.org)
-- Detectron2 v0.4
+- PyTorch 1.6.0 with CUDA 10.2 --> Refer to download guildlines at the [PyTorch website](pytorch.org)
+- Detectron2 [v0.4](https://github.com/facebookresearch/detectron2/releases/tag/v0.4)
 - OpenCV is optional but required for visualizations
 - 
 #### Detectron2 
