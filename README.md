@@ -1,62 +1,68 @@
-<img src=".github/Detectron2-Logo-Horz.svg" width="300" >
+# Long-tail Object Detection
 
-Detectron2 is Facebook AI Research's next generation software system
-that implements state-of-the-art object detection algorithms.
-It is a ground-up rewrite of the previous version,
-[Detectron](https://github.com/facebookresearch/Detectron/),
-and it originates from [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark/).
+## Abstract
+We built the averaged backbone, Transformer block and contrastive branch, and check their impact on detection with experiments. Our final model leverages the memory bank to collect rare samples and to resample randomly; generate new rare samples with the attention mechanism of Transformer block; distinguish different foreground classes by contrastive learning and trained in the multi-tasks fashion. The final model trained on LVIS dataset, surpasses other state-of-the-art models, gains 3 percent improvement on mAP compared with the Backbone. In the end, we analyze the shortcomings of current model and provide future directions. <br>
 
-<div align="center">
-  <img src="https://user-images.githubusercontent.com/1381301/66535560-d3422200-eace-11e9-9123-5535d469db19.png"/>
-</div>
 
-### What's New
-* It is powered by the [PyTorch](https://pytorch.org) deep learning framework.
-* Includes more features such as panoptic segmentation, Densepose, Cascade R-CNN, rotated bounding boxes, PointRend,
-  DeepLab, etc.
-* Can be used as a library to support [different projects](projects/) on top of it.
-  We'll open source more research projects in this way.
-* It [trains much faster](https://detectron2.readthedocs.io/notes/benchmarks.html).
-* Models can be exported to TorchScript format or Caffe2 format for deployment.
-
-See our [blog post](https://ai.facebook.com/blog/-detectron2-a-pytorch-based-modular-object-detection-library-/)
-to see more demos and learn about detectron2.
+## Requirements
+- Linux or maxOS with Python >= 3.6
+- PyTorch >= 1.5 and torchvision corresponding to PyTorch installation. Please refer to download guildlines at the [PyTorch website](pytorch.org)
+- Detectron2 
+- OpenCV is optional but required for visualizations
 
 ## Installation
 
-See [INSTALL.md](INSTALL.md).
+#### Environment
+- Python 3.8.11
+- PyTorch 1.6.0 with CUDA 10.2
+- Detectron2 v0.4
 
-## Getting Started
+#### Detectron2 
+Please refer to the installation instructions in [Detectron2](https://github.com/facebookresearch/detectron2/blob/master/INSTALL.md).<br>
 
-Follow the [installation instructions](https://detectron2.readthedocs.io/tutorials/install.html) to
-install detectron2.
+#### LVIS Dataset 
+Dataset download is available at the official [LVIS website](https://www.lvisdataset.org/dataset). Please follow [Detectron's guildlines](https://github.com/facebookresearch/detectron2/tree/master/datasets) on expected LVIS dataset structure.
 
-See [Getting Started with Detectron2](https://detectron2.readthedocs.io/tutorials/getting_started.html),
-and the [Colab Notebook](https://colab.research.google.com/drive/16jcaJoc6bCFAQ96jDe2HwtXj7BMD_-m5)
-to learn about basic usage.
+## Training & Evaluation
 
-Learn more at our [documentation](https://detectron2.readthedocs.org).
-And see [projects/](projects/) for some projects that are built on top of detectron2.
+Our code is located under [projects/RIO](https://github.com/Ribosome-rbx/long-tail-detection/tree/main/projects/long-tail-detection). <br>
 
-## Model Zoo and Baselines
+Our training and evaluation follows those of Detectron2's. The config files for both LVISv0.5 and LVISv1.0 are provided.
 
-We provide a large set of baseline results and trained models available for download in the [Detectron2 Model Zoo](MODEL_ZOO.md).
+Example: Training LVISv0.5 on Mask-RCNN ResNet-50
 
-
-## License
-
-Detectron2 is released under the [Apache 2.0 license](LICENSE).
-
-## Citing Detectron2
-
-If you use Detectron2 in your research or wish to refer to the baseline results published in the [Model Zoo](MODEL_ZOO.md), please use the following BibTeX entry.
-
-```BibTeX
-@misc{wu2019detectron2,
-  author =       {Yuxin Wu and Alexander Kirillov and Francisco Massa and
-                  Wan-Yen Lo and Ross Girshick},
-  title =        {Detectron2},
-  howpublished = {\url{https://github.com/facebookresearch/detectron2}},
-  year =         {2019}
-}
 ```
+# We advise multi-gpu training
+cd projects/long-tail-detection
+python dual_train_net.py \
+--num-gpus 4 \
+--config-file ./configs/Dual-RCNN-sample.yaml \
+OUTPUT_DIR ./outputs
+```
+For single-gpu training, we need to adjust the learning rate and batchsize
+```
+python dual_train_net.py \
+--num-gpus 1 \
+--config-file ./configs/Dual-RCNN-sample.yaml \
+SOLVER.BASE_LR 0.0025 SOLVER.IMS_PER_BATCH 2 OUTPUT_DIR ./outputs
+```
+
+Example: Evaluating LVISv0.5 on Mask-RCNN ResNet-50
+```
+cd projects/long-tail-detection
+python dual_train_net.py \
+--eval-only MODEL.WEIGHTS /path/to/model_checkpoint \
+--config-file ./configs/Dual-RCNN-sample.yaml \
+OUTPUT_DIR ./outputs
+```
+
+By default, LVIS evaluation follows immediately after training. 
+
+## Visualization
+Detectron2 has built-in visualization tools. Under tools folder, visualize_json_results.py can be used to visualize the json instance detection/segmentation results given by LVISEvaluator. 
+
+```
+python visualize_json_results.py --input x.json --output dir/ --dataset lvis
+```
+
+Further information can be found on [Detectron2 tools' README](https://github.com/facebookresearch/detectron2/tree/master/tools).
