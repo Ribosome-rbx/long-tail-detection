@@ -3,11 +3,33 @@ MODEL:
   META_ARCHITECTURE: "DualRCNN_sample"
   BACKBONE:
     MOMENTUM: 0.99
+    # Transformer configs
+    NUM_HEADS: 8
+    NUM_DECODER_LAYERS: 6
+    DIM_FEEDFORWARD: 2048
+    DROPOUT: 0.1
+    ACTIVATION: "relu"
+    NORMALIZE_BEFORE: False
+    NORM: None
+    RETURN_INTERMEDIATE: True
+    TRANSFORMER_WEIGHT: 1.0
+    #contrastive branch
+    MLP_FEATURE_DIM: 128
+    TEMPERATURE: 0.1
+    LOSS_WEIGHT: 0.5
   ROI_HEADS:
     NAME: "dualROIHeads"
+    CONTRASTIVE_BRANCH: False
+    # memory bank configs
+    TEMP_S: 48
+    MIN_CACHE: 20
+    MAX_CACHE: 60
+    RANDOM_SELECT: False
+    CACHE_CAT_FILE: "lvis0.5_rare_cats.txt"
+    CLS_LAYER: "cosine"
+    RUN: 1
+    RAND_NUM: 2
     RARE_CAT_FILE: "lvis_categories_lists/lvis0.5_rare_common30_cats.txt"
     CACHE_CAT_FILE: "lvis_categories_lists/lvis0.5_rare_common30_cats.txt"
-    # RARE_WEIGHT: 0.01
 TEST:
   EVAL_PERIOD: 5000
-SEED: 6481261
