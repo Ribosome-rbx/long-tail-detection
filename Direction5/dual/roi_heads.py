@@ -295,7 +295,7 @@ class dualROIHeads(StandardROIHeads):
                 )
 
                 # query, key, proposals = self.get_qk(box_features, proposals, self.cache_categories)
-                new_feats = self.transformer(new_feats.unsqueeze(1).cuda(), box_features.unsqueeze(1))
+                # new_feats = self.transformer(new_feats.unsqueeze(1).cuda(), box_features.unsqueeze(1))
 
                 new_features = torch.cat((new_features, new_feats.cuda()), dim=0)
                 if None in self.memory_cache[c]["proposals"][cache_idxs]:
@@ -397,10 +397,11 @@ class dualROIHeads(StandardROIHeads):
         if self.training:
             losses = self.box_predictor.losses(predictions, augmented_proposals)
             if self.contrastive_branch:
-                breakpoint()
+                # breakpoint()
                 gt_classes = [prop.gt_classes for prop in augmented_proposals]
                 gt_classes = torch.cat(gt_classes, dim=0)
-                losses.update(self.contrastive_head(box_features, gt_classes, len_rare)) ###
+                filter = np.where((gt_classes!=self.num_classes).cpu().numpy())[0]
+                losses.update(self.contrastive_head(box_features[filter], gt_classes[filter], len_rare)) ###
             del box_features
             # proposals is modified in-place below, so losses must be computed first.
             if self.train_on_pred_boxes:
