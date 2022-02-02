@@ -1,20 +1,62 @@
-# Illustration on different directions
-## Direction1:
-Resample rare imgs with avg_backbone
-- Direction1-v2: the base (named "d1" in the doc)
-- Direction1-v3: d1 with losses splited into cur_loss and avg_loss for the origional batch and the resmapled images
+<img src=".github/Detectron2-Logo-Horz.svg" width="300" >
 
-## Direction2:
-Transformer from head features to tail features (no avg_backbone is used)
-- in "master" branch: the base (named "d2" in the doc)
-- in "memorybank" branch: built on top of RIO (named "RIO+d2" in the doc)
+Detectron2 is Facebook AI Research's next generation software system
+that implements state-of-the-art object detection algorithms.
+It is a ground-up rewrite of the previous version,
+[Detectron](https://github.com/facebookresearch/Detectron/),
+and it originates from [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark/).
 
-## Direction3:
-Transformer from avg_rare to cur_rare images (with avg_backbone, built on top of "d1")
+<div align="center">
+  <img src="https://user-images.githubusercontent.com/1381301/66535560-d3422200-eace-11e9-9123-5535d469db19.png"/>
+</div>
 
-## Direction4:
-A failure trial on modifying contrastive learning scheme.
+### What's New
+* It is powered by the [PyTorch](https://pytorch.org) deep learning framework.
+* Includes more features such as panoptic segmentation, Densepose, Cascade R-CNN, rotated bounding boxes, PointRend,
+  DeepLab, etc.
+* Can be used as a library to support [different projects](projects/) on top of it.
+  We'll open source more research projects in this way.
+* It [trains much faster](https://detectron2.readthedocs.io/notes/benchmarks.html).
+* Models can be exported to TorchScript format or Caffe2 format for deployment.
 
-## Direction5:
-Apply transformer on the output of memory bank (for details, view the sildes on 26th Nov)
-*Currently developing
+See our [blog post](https://ai.facebook.com/blog/-detectron2-a-pytorch-based-modular-object-detection-library-/)
+to see more demos and learn about detectron2.
+
+## Installation
+
+See [INSTALL.md](INSTALL.md).
+
+## Getting Started
+
+Follow the [installation instructions](https://detectron2.readthedocs.io/tutorials/install.html) to
+install detectron2.
+
+See [Getting Started with Detectron2](https://detectron2.readthedocs.io/tutorials/getting_started.html),
+and the [Colab Notebook](https://colab.research.google.com/drive/16jcaJoc6bCFAQ96jDe2HwtXj7BMD_-m5)
+to learn about basic usage.
+
+Learn more at our [documentation](https://detectron2.readthedocs.org).
+And see [projects/](projects/) for some projects that are built on top of detectron2.
+
+## Model Zoo and Baselines
+
+We provide a large set of baseline results and trained models available for download in the [Detectron2 Model Zoo](MODEL_ZOO.md).
+
+
+## License
+
+Detectron2 is released under the [Apache 2.0 license](LICENSE).
+
+## Citing Detectron2
+
+If you use Detectron2 in your research or wish to refer to the baseline results published in the [Model Zoo](MODEL_ZOO.md), please use the following BibTeX entry.
+
+```BibTeX
+@misc{wu2019detectron2,
+  author =       {Yuxin Wu and Alexander Kirillov and Francisco Massa and
+                  Wan-Yen Lo and Ross Girshick},
+  title =        {Detectron2},
+  howpublished = {\url{https://github.com/facebookresearch/detectron2}},
+  year =         {2019}
+}
+```
