@@ -3,20 +3,14 @@
 ## Abstract
 We built the averaged backbone, Transformer block and contrastive branch, and check their impact on detection with experiments. Our final model leverages the memory bank to collect rare samples and to resample randomly; generate new rare samples with the attention mechanism of Transformer block; distinguish different foreground classes by contrastive learning and trained in the multi-tasks fashion. The final model trained on LVIS dataset, surpasses other state-of-the-art models, gains 3 percent improvement on mAP compared with the Backbone. In the end, we analyze the shortcomings of current model and provide future directions. <br>
 
-
-## Requirements
-- Linux or maxOS with Python >= 3.6
-- PyTorch >= 1.5 and torchvision corresponding to PyTorch installation. Please refer to download guildlines at the [PyTorch website](pytorch.org)
-- Detectron2 
-- OpenCV is optional but required for visualizations
-
 ## Installation
 
 #### Environment
-- Python 3.8.11
-- PyTorch 1.6.0 with CUDA 10.2
+- Python >= 3.6
+- PyTorch 1.6.0 with CUDA 10.2 Please refer to download guildlines at the [PyTorch website](pytorch.org)
 - Detectron2 v0.4
-
+- OpenCV is optional but required for visualizations
+- 
 #### Detectron2 
 Please refer to the installation instructions in [Detectron2](https://github.com/facebookresearch/detectron2/blob/master/INSTALL.md).<br>
 
@@ -30,14 +24,13 @@ Our code is located under [projects/RIO](https://github.com/Ribosome-rbx/long-ta
 Our training and evaluation follows those of Detectron2's. The config files for both LVISv0.5 and LVISv1.0 are provided.
 
 Example: Training LVISv0.5 on Mask-RCNN ResNet-50
+For multi-gpu training (advised)
 
 ```
-# We advise multi-gpu training
 cd projects/long-tail-detection
 python dual_train_net.py \
 --num-gpus 4 \
---config-file ./configs/Dual-RCNN-sample.yaml \
-OUTPUT_DIR ./outputs
+--config-file ./configs/Dual-RCNN-sample.yaml OUTPUT_DIR ./outputs
 ```
 For single-gpu training, we need to adjust the learning rate and batchsize
 ```
@@ -52,8 +45,7 @@ Example: Evaluating LVISv0.5 on Mask-RCNN ResNet-50
 cd projects/long-tail-detection
 python dual_train_net.py \
 --eval-only MODEL.WEIGHTS /path/to/model_checkpoint \
---config-file ./configs/Dual-RCNN-sample.yaml \
-OUTPUT_DIR ./outputs
+--config-file ./configs/Dual-RCNN-sample.yaml OUTPUT_DIR ./outputs
 ```
 
 By default, LVIS evaluation follows immediately after training. 
