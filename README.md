@@ -19,7 +19,7 @@ Dataset download is available at the official [LVIS website](https://www.lvisdat
 
 ## Training & Evaluation
 
-Our code is located under [projects/RIO](https://github.com/Ribosome-rbx/long-tail-detection/tree/main/projects/long-tail-detection). <br>
+Our code is located under [projects/long-tail-detection](https://github.com/Ribosome-rbx/long-tail-detection/tree/main/projects/long-tail-detection). <br>
 
 Our training and evaluation follows those of Detectron2's. The config files for both LVISv0.5 and LVISv1.0 are provided.
 
