@@ -1,20 +1,14 @@
-# Illustration on different directions
-## Direction1:
-Resample rare imgs with avg_backbone
-- Direction1-v2: the base (named "d1" in the doc)
-- Direction1-v3: d1 with losses splited into cur_loss and avg_loss for the origional batch and the resmapled images
+# Illustrations on Source Code
+## [configs](https://github.com/Ribosome-rbx/long-tail-detection/tree/main/projects/long-tail-detection/configs)
+- Dual-RCNN-sample.yaml: used for final model training and evaluating.
+- Dual-RCNN-con.yaml: use contrastive learning on top of final model
+- 
+## [project_models](https://github.com/Ribosome-rbx/long-tail-detection/tree/main/projects/long-tail-detection/project_models)
+Files used for building models
+- rcnn_sample.py: build momentum updated branch (all relative codes are annotated)
+- roi_heads.py: build the memory bank
+- transformer.py: build the Transformer block
+- contrastive_loss.py: build the contrastive branch
 
-## Direction2:
-Transformer from head features to tail features (no avg_backbone is used)
-- in "master" branch: the base (named "d2" in the doc)
-- in "memorybank" branch: built on top of RIO (named "RIO+d2" in the doc)
-
-## Direction3:
-Transformer from avg_rare to cur_rare images (with avg_backbone, built on top of "d1")
-
-## Direction4:
-A failure trial on modifying contrastive learning scheme.
-
-## Direction5:
-Apply transformer on the output of memory bank (for details, view the sildes on 26th Nov)
-*Currently developing
+## [lvis_categories_lists](https://github.com/Ribosome-rbx/long-tail-detection/tree/main/projects/long-tail-detection/lvis_categories_lists)
+TXT files which divide LVIS classes in groups
