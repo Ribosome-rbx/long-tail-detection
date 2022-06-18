@@ -69,9 +69,9 @@ By default, LVIS evaluation follows immediately after training.
 
 <!-- TABLE BODY -->
 <!-- ROW: 1 -->
- <tr><td align="center">[✓]</td>
-<td align="center">[]</td>
-<td align="center">[]</td>
+ <tr><td align="center">✓</td>
+<td align="center"></td>
+<td align="center"></td>
 <td align="center">22.035</td>
 <td align="center">16.573</td>
 <td align="center">19.456</td>
