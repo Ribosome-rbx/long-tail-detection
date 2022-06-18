@@ -15,7 +15,7 @@ We built the averaged backbone, Transformer block and contrastive branch, and ch
 Please refer to the installation instructions in [Detectron2](https://github.com/facebookresearch/detectron2/blob/master/INSTALL.md).<br>
 
 #### LVIS Dataset 
-Dataset download is available at the official [LVIS website](https://www.lvisdataset.org/dataset). Please follow [Detectron's guildlines](https://github.com/facebookresearch/detectron2/tree/master/datasets) on expected LVIS dataset structure.
+Dataset download is available at the official [LVIS website](https://www.lvisdataset.org/dataset). Please follow [Detectron's guildlines](https://github.com/facebookresearch/detectron2/tree/master/datasets) on expected LVIS dataset structure.<br>
 Install lvis-api by:
 ```
 pip install git+https://github.com/lvis-dataset/lvis-api.git
