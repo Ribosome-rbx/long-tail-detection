@@ -103,7 +103,7 @@ By default, LVIS evaluation follows immediately after training.
 <td align="center"></td>
 <td align="center">✓</td>
 <td align="center">22.015</td>
-<td align="center">**18.457**</td>
+<td align="center"> **18.457** </td>
 <td align="center">18.873</td>
 <td align="center">27.371</td>
 <td align="center">22.536</td>
@@ -121,6 +121,8 @@ By default, LVIS evaluation follows immediately after training.
 </tbody></table>
 __23.551__
 **23.551**
+**bold text**<br>
+
 ## Visualization
 Detectron2 has built-in visualization tools. Under tools folder, visualize_json_results.py can be used to visualize the json instance detection/segmentation results given by LVISEvaluator. 
 
