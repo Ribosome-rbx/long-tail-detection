@@ -54,6 +54,72 @@ python dual_train_net.py \
 
 By default, LVIS evaluation follows immediately after training. 
 
+## Ablation Study
+<table><tbody>
+<!-- START TABLE -->
+<!-- TABLE HEADER -->
+<th valign="bottom">Memory<br/>Bank</th>
+<th valign="bottom">Transformer</th>
+<th valign="bottom">Contrastive<br/>Branch</th>
+<th valign="bottom">box<br/>AP</th>
+<th valign="bottom">box<br/>AP.r</th>
+<th valign="bottom">box<br/>AP.c</th>
+<th valign="bottom">box<br/>AP.f</th>
+<th valign="bottom">mask<br/>AP</th>
+
+<!-- TABLE BODY -->
+<!-- ROW: 1 -->
+ <tr><td align="center">[✓]</td>
+<td align="center">[]</td>
+<td align="center">[]</td>
+<td align="center">22.035</td>
+<td align="center">16.573</td>
+<td align="center">19.456</td>
+<td align="center">27.445</td>
+<td align="center">22.606</td>
+</tr>
+<!-- ROW: 2 -->
+ <tr><td align="center">[]</td>
+<td align="center">[✓]</td>
+<td align="center">[]</td>
+<td align="center">21.860</td>
+<td align="center">11.003</td>
+<td align="center">20.673</td>
+<td align="center">27.682</td>
+<td align="center">22.663</td>
+</tr>
+<!-- ROW: 3 -->
+ <tr><td align="center">[✓]</td>
+<td align="center">[✓]</td>
+<td align="center">[]</td>
+<td align="center">23.029</td>
+<td align="center">14.389</td>
+<td align="center">21.793</td>
+<td align="center">28.028</td>
+<td align="center">23.399</td>
+</tr>
+<!-- ROW: 4 -->
+ <tr><td align="center">[✓]</td>
+<td align="center">[]</td>
+<td align="center">[✓]</td>
+<td align="center">22.015</td>
+<td align="center">**18.457**</td>
+<td align="center">18.873</td>
+<td align="center">27.371</td>
+<td align="center">22.536</td>
+</tr>
+<!-- ROW: 5 -->
+ <tr><td align="center">[✓]</td>
+<td align="center">[✓]</td>
+<td align="center">[✓]</td>
+<td align="center">**23.551**</td>
+<td align="center">15.454</td>
+<td align="center">**22.532**</td>
+<td align="center">**28.060**</td>
+<td align="center">**23.935**</td>
+</tr>
+</tbody></table>
+
 ## Visualization
 Detectron2 has built-in visualization tools. Under tools folder, visualize_json_results.py can be used to visualize the json instance detection/segmentation results given by LVISEvaluator. 
 
