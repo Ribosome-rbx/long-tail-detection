@@ -1,7 +1,7 @@
 # Long-tail Object Detection
 
 ## Abstract
-We built the averaged backbone, Transformer block and contrastive branch, and check their impact on detection with experiments. Our final model leverages the memory bank to collect rare samples and to resample randomly; generate new rare samples with the attention mechanism of Transformer block; distinguish different foreground classes by contrastive learning and trained in the multi-tasks fashion. The final model trained on LVIS dataset, surpasses other state-of-the-art models, gains 3 percent improvement on mAP compared with the Backbone. In the end, we analyze the shortcomings of current model and provide future directions. <br>
+We built the averaged backbone, Transformer block and contrastive branch, and check their impact on detection with experiments. Our final model leverages the memory bank to collect rare samples and to resample randomly; generate new rare samples with the attention mechanism of Transformer block; distinguish different foreground classes by contrastive learning and trained in the multi-tasks fashion. The final model trained on LVIS dataset, surpasses other models, gains near 3 percent improvement on mAP compared with the Backbone. In the end, we analyze the shortcomings of current model and provide future directions. <br>
 
 ## Installation
 
