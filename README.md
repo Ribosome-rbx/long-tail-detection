@@ -16,6 +16,10 @@ Please refer to the installation instructions in [Detectron2](https://github.com
 
 #### LVIS Dataset 
 Dataset download is available at the official [LVIS website](https://www.lvisdataset.org/dataset). Please follow [Detectron's guildlines](https://github.com/facebookresearch/detectron2/tree/master/datasets) on expected LVIS dataset structure.
+Install lvis-api by:
+```
+pip install git+https://github.com/lvis-dataset/lvis-api.git
+```
 
 ## Training & Evaluation
 
