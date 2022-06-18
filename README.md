@@ -103,7 +103,7 @@ By default, LVIS evaluation follows immediately after training.
 <td align="center"></td>
 <td align="center">✓</td>
 <td align="center">22.015</td>
-<td align="center">18.457</td>
+<td align="center"><strong>18.457</strong></td>
 <td align="center">18.873</td>
 <td align="center">27.371</td>
 <td align="center">22.536</td>
@@ -114,9 +114,9 @@ By default, LVIS evaluation follows immediately after training.
 <td align="center">✓</td>
 <td align="center"><strong>23.551</strong></td>
 <td align="center">15.454</td>
-<td align="center">22.532</td>
-<td align="center">28.060</td>
-<td align="center">23.935</td>
+<td align="center"><strong>22.532</strong></td>
+<td align="center"><strong>28.060</strong></td>
+<td align="center"><strong>23.935</strong></td>
 </tr>
 </tbody></table>
 
